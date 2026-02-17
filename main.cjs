@@ -5,6 +5,7 @@ const fs = require("fs");
 
 let win;
 
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -16,6 +17,7 @@ function createWindow() {
   });
 
   win.loadURL("http://localhost:5173");
+  win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
@@ -27,6 +29,19 @@ ipcMain.handle("select-folder", async () => {
   });
   return res.canceled ? null : res.filePaths[0];
 });
+function getUniquePath(folder, baseName, ext) {
+  let i = 0;
+  let filePath;
+
+  do {
+    const suffix = i === 0 ? "" : `(${i})`;
+    filePath = path.join(folder, `${baseName}${suffix}.${ext}`);
+    i++;
+  } while (fs.existsSync(filePath));
+
+  console.log("FINAL PATH:", filePath);
+  return filePath;
+}
 
 // 🎥 video info
 ipcMain.handle("get-info", async (event, url) => {
@@ -104,14 +119,23 @@ ipcMain.handle("download-video", async (event, data) => {
       const file = fs.readdirSync(folder).find(f => f.startsWith("temp."));
       const inputFile = path.join(folder, file);
 
-      const output = path.join(folder, `${name}.${format}`);
+      const output = getUniquePath(folder, name, format);
 
-      let args = [
-        "-i", inputFile,
-        "-ss", start,
-        "-to", end,
-        "-y"
-      ];
+
+      let args = ["-i", inputFile];
+
+      // ⏱ sadece varsa ekle
+      if (start) {
+        console.log("START CUT:", start);
+        args.push("-ss", start);
+      }
+
+      if (end) {
+        console.log("END CUT:", end);
+        args.push("-to", end);
+      }
+
+      args.push("-y");
 
       if (format === "mp3") {
         args.push(

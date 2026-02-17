@@ -3,6 +3,8 @@ const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
 
+const isDev = false;
+
 let win;
 
 
@@ -13,13 +15,22 @@ function createWindow() {
     backgroundColor: "#0f0f0f",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false
     },
-    icon: path.join(__dirname, "renderer/assets/Penguverter.ico"), 
+    icon: path.join(__dirname, "renderer/assets/Penguverter.ico"),
   });
 
-  win.loadURL("http://localhost:5173");
-  
+  const isDev = process.env.ELECTRON_IS_DEV === "true";
+
+  win.loadURL("http://localhost:5173").catch(() => {
+    console.log("❌ localhost:5173 başarısız, production yükleniyor...");
+    const filePath = path.join(__dirname, "dist", "index.html");
+    win.loadFile(filePath);
+  });
 }
+
+
 
 app.whenReady().then(createWindow);
 
@@ -46,28 +57,60 @@ function getUniquePath(folder, baseName, ext) {
 
 // 🎥 video info
 ipcMain.handle("get-info", async (event, url) => {
-  const ytDlp = path.join(__dirname, "bin", "yt-dlp.exe");
+  const basePath = isDev ? __dirname : process.resourcesPath;
+  const ytDlp = path.join(basePath, "bin", "yt-dlp.exe");
 
-  return new Promise((resolve) => {
-    const proc = spawn(ytDlp, ["-j", url]);
+  console.log("YTDLP PATH:", ytDlp);
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ytDlp, ["-j", "--no-playlist", url]);
 
     let data = "";
+    let error = "";
 
+    // ✅ stdout
     proc.stdout.on("data", (d) => {
+      console.log("STDOUT CHUNK:", d.toString());
       data += d.toString();
     });
 
-    proc.on("close", () => {
-      const json = JSON.parse(data);
-      resolve({
-        title: json.title,
-        duration: json.duration,
-        thumbnail: json.thumbnail,
-        uploader: json.uploader,
-      });
+    // ✅ stderr (ÇOK ÖNEMLİ)
+    proc.stderr.on("data", (d) => {
+      console.log("STDERR:", d.toString());
+      error += d.toString();
+    });
+
+    proc.on("error", (err) => {
+      console.log("SPAWN ERROR:", err);
+      reject(err);
+    });
+
+    proc.on("close", (code) => {
+      console.log("PROCESS CLOSED:", code);
+      // console.log("RAW DATA:", data);
+      console.log("ERROR DATA:", error);
+
+      if (!data) {
+        return reject("No data from yt-dlp");
+      }
+
+      try {
+        const json = JSON.parse(data);
+        console.log("PARSED JSON:", json);
+        resolve({
+          title: json.fulltitle,
+          duration: json.duration,
+          thumbnail: json.thumbnail,
+          uploader: json.uploader,
+        });
+      } catch (e) {
+        console.log("JSON PARSE ERROR:", e);
+        reject(e);
+      }
     });
   });
 });
+
 
 // 🧠 filename temizleme
 function sanitize(name) {
@@ -84,13 +127,17 @@ function parseProgress(line) {
 ipcMain.handle("download-video", async (event, data) => {
   const { url, folder, start, end, format, quality, fileName, includeTag } = data;
 
-  const ytDlp = path.join(__dirname, "bin", "yt-dlp.exe");
-  const ffmpeg = path.join(__dirname, "bin", "ffmpeg.exe");
+  const basePath = isDev
+    ? __dirname
+    : process.resourcesPath;
 
-  let name = sanitize(fileName);
+  const ytDlp = path.join(basePath, "bin", "yt-dlp.exe");
+  const ffmpeg = path.join(basePath, "bin", "ffmpeg.exe");
+
+  let name = sanitize(fileName || "output");
 
   if (includeTag) {
-    name += " (Converted by Penguverter)";
+    name = `${name} (Converted by Penguverter)`;
   }
 
   return new Promise((resolve, reject) => {

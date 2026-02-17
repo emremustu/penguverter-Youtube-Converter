@@ -6,5 +6,8 @@ export default {
   theme: {
     extend: {},
   },
+  build: {
+    outDir: "../app-dist",
+  },
   plugins: [],
 };

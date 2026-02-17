@@ -1,5 +1,9 @@
 import { useState } from "react";
 import logo from "./assets/logo.png";
+import { useEffect } from "react";
+
+
+
 
 function getVideoId(url) {
   try {
@@ -65,6 +69,9 @@ const translations = {
 };
 
 export default function App() {
+  const [info, setInfo] = useState(null);
+const [progress, setProgress] = useState(0);
+const [downloading, setDownloading] = useState(false);
   const [lang, setLang] = useState("tr");
 
   const t = translations[lang];
@@ -76,6 +83,47 @@ export default function App() {
   const [format, setFormat] = useState("mp3");
   const [quality, setQuality] = useState("best");
   const [fileName, setFileName] = useState("");
+
+  useEffect(() => {
+    if (!window.electron?.onProgress) return;
+
+    const handler = (p) => {
+      console.log("PROGRESS:", p);
+      setProgress(p);
+    };
+
+    window.electron.onProgress(handler);
+
+    return () => {
+      window.electron.removeProgress?.(handler);
+    };
+  }, []);
+
+
+
+useEffect(() => {
+  if (!url) return;
+
+  const fetchInfo = async () => {
+    try {
+      const data = await window.electron.getInfo(url);
+      console.log("VIDEO INFO:", data);
+
+      setInfo(data);
+
+      // input boşsa title doldur
+      if (!fileName && data?.title) {
+        setFileName(data.title);
+      }
+
+    } catch (err) {
+      console.log("INFO ERROR:", err);
+    }
+  };
+
+  fetchInfo();
+}, [url]);
+
 
   const videoId = getVideoId(url);
 
@@ -91,6 +139,9 @@ export default function App() {
       alert(t.alertRequired);
       return;
     }
+
+    setDownloading(true);
+    setProgress(0);
 
     const startSec = timeToSeconds(start);
     const endSec = timeToSeconds(end);
@@ -123,12 +174,14 @@ export default function App() {
 
     console.log("DONE:", res);
 
+    setDownloading(false);
     alert(t.alertDone);
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 to-black text-white p-6 flex flex-col">
-      
+
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
@@ -153,7 +206,7 @@ export default function App() {
 
       {/* MAIN */}
       <div className="max-w-3xl mx-auto w-full flex-1">
-        
+
         <input
           className="border border-zinc-600 bg-zinc-800 p-3 w-full mb-4 rounded-xl"
           placeholder={t.urlPlaceholder}
@@ -167,7 +220,19 @@ export default function App() {
             src={`https://www.youtube.com/embed/${videoId}`}
             allowFullScreen
           />
+
         )}
+        {info && (
+          <div className="bg-zinc-800 p-3 rounded-xl mb-4">
+            <p className="text-sm font-semibold">{info.title}</p>
+
+            <div className="text-xs text-gray-400 mt-1 flex gap-3">
+              <span>👤 {info.uploader}</span>
+              <span>⏱ {Math.floor(info.duration / 60)}:{(info.duration % 60).toString().padStart(2, "0")}</span>
+            </div>
+          </div>
+        )}
+
 
         {/* TIME RANGE */}
         <div className="mb-4 grid grid-cols-2 gap-4">
@@ -240,10 +305,25 @@ export default function App() {
 
         <button
           onClick={download}
-          className="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-semibold"
+          disabled={downloading}
+          className="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-semibold disabled:opacity-50"
         >
-          {t.download}
+          {downloading ? "Downloading..." : t.download}
         </button>
+        {downloading && (
+          <div className="mt-4">
+            <div className="w-full bg-zinc-700 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <p className="text-xs text-gray-400 mt-1">
+              {progress.toFixed(1)}%
+            </p>
+          </div>
+        )}
       </div>
 
       {/* FOOTER */}

@@ -24,13 +24,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "electron": "^40.4.1",
     "lucide-react": "^0.564.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "wait-on": "^9.0.4"
   },
   "devDependencies": {
+    "electron": "^40.4.1",
+
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.24",
     "concurrently": "^9.2.1",

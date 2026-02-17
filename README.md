@@ -55,6 +55,9 @@ Penguverter, YouTube videolarını kolayca indirip **MP3 (ses)** veya **MP4 (vid
   * "More info" → "Run anyway"
 * Sadece YouTube linkleri desteklenir
 
+* Embedded iframede 153 hatası verse de sorunsuz çalışıyor sadece iframede çözemediğim bir hata oldu. Diğer versiyonlarda çözmeyi düşünüyorum
+
+
 ---
 
 ## 🇬🇧 English

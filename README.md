@@ -1,6 +1,12 @@
 <p align="center">
   <img src="renderer/assets/logo.png" width="120" />
 </p>
+<p align="center">
+  <img src="renderer/assets/logo.png" width="120" />
+</p>
+<p align="center">
+  <img src="renderer/assets/logo.png" width="120" />
+</p>
 
 # 🐧 Penguverter
 

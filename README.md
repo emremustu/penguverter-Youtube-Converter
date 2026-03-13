@@ -16,6 +16,8 @@ Penguverter, YouTube videolarını kolayca indirip **MP3 (ses)** veya **MP4 (vid
 
 * 🎵 MP3 olarak indirme
 * 🎬 MP4 olarak indirme
+* 📦 **Toplu İndirme Modu (Aynı anda birden fazla video)**
+* ℹ️ Video bilgi kartı ve yükleme durumu
 * ⏱ Başlangıç & bitiş aralığı seçme (clip alma)
 * 📁 Klasör seçebilme
 * 🏷 Dosya adı belirleme
@@ -69,6 +71,8 @@ Penguverter is a simple desktop application that allows you to download YouTube 
 
 * 🎵 Download as MP3
 * 🎬 Download as MP4
+* 📦 **Bulk Download Mode (Multiple videos at once)**
+* ℹ️ Video info cards and loading states
 * ⏱ Select start & end time (clip extraction)
 * 📁 Choose download folder
 * 🏷 Custom file name

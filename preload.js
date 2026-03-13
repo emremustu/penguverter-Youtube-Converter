@@ -7,5 +7,15 @@ contextBridge.exposeInMainWorld("electron", {
 
   getInfo: (url) => ipcRenderer.invoke("get-info", url),
 
-  onProgress: (cb) => ipcRenderer.on("progress", (e, p) => cb(p)),
+  onProgress: (cb) => {
+    const wrapper = (e, p) => cb(p);
+    cb._ipcWrapper = wrapper;
+    ipcRenderer.on("progress", wrapper);
+  },
+
+  removeProgress: (cb) => {
+    if (cb._ipcWrapper) {
+      ipcRenderer.removeListener("progress", cb._ipcWrapper);
+    }
+  },
 });

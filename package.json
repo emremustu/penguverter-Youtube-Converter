@@ -1,6 +1,6 @@
 {
   "name": "penguverter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "main.cjs",
   "type": "module",
   "description": "Penguverter MP3/MP4 converter",
@@ -27,18 +27,22 @@
       "bin/**/*",
       "assets/**/*"
     ],
-     "extraResources": [
-    {
-      "from": "bin/",
-      "to": "bin",
-      "filter": ["**/*"]
-    }
-  ],
+    "extraResources": [
+      {
+        "from": "bin/",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/Penguverter.ico"

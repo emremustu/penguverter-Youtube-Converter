@@ -3,7 +3,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 const fs = require("fs");
 
-const isDev = false;
+const isDev = !app.isPackaged;
 
 let win;
 
